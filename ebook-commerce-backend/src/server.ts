@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from "dotenv";
 import path from "path";
 import connectDB from './config/data';
-
+import EmailService from './utils/emailService';
 // Import routes
 import paymentRoutes from './routes/payment';
 import downloadRoutes from './routes/download';
@@ -30,7 +30,38 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+// TEST ENDPOINT za slanje emaila sa URL attachment
+app.post('/test/email', async (req, res) => {
+  try {
+    const { email, fileUrl } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email je obavezan' });
+    }
+    
+    // Koristi default test URL ako nije dat
+    const testUrl = fileUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    
+    console.log('\n🧪 === TEST EMAIL ENDPOINT ===');
+    console.log('📧 Test email:', email);
+    console.log('📎 Test URL:', testUrl);
+    
+    await EmailService.sendTestEmail(email, testUrl);
+    
+    res.json({ 
+      success: true, 
+      message: 'Test email poslat!',
+      email: email,
+      testUrl: testUrl
+    });
+    
+  } catch (error) {
+    console.error('Test email greška:', error);
+    res.status(500).json({ 
+      error: 'Greška pri slanju test emaila: '  
+    });
+  }
+});
 // Serve static files for uploads
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
@@ -80,14 +111,6 @@ const startServer = async (): Promise<void> => {
 🌐 Environment: ${process.env.NODE_ENV || 'development'}
 📱 Local: http://localhost:${PORT}
 🗄️  Database: Connected to MongoDB
-🛣️  Routes: 
-   - GET  /health
-   - GET  /uploads/*
-   - POST /api/payment/create-payment-intent
-   - POST /api/payment/confirm-payment
-   - GET  /api/payment/order/:orderId
-   - GET  /api/download/:token
-   - GET  /api/download/info/:token
       `);
     });
   } catch (error) {

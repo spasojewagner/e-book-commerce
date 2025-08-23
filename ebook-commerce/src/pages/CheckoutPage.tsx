@@ -121,17 +121,18 @@ export const CheckoutPage: React.FC = () => {
   }, [validateForm, state.items, actions, total]);
 
   // Handle successful Stripe payment
-  const handlePaymentSuccess = useCallback(async (paymentIntentId: string) => {
-    try {
-      setLocalError('');
-      await actions.confirmPayment(paymentIntentId);
-      
-      // Success! The useEffect will handle redirect
-    } catch (err) {
-      console.error('Payment confirmation failed:', err);
-      setLocalError('Payment succeeded but confirmation failed. Please contact support.');
-    }
-  }, [actions]);
+const handlePaymentSuccess = useCallback(async (paymentIntentId: string) => {
+  try {
+    console.log('🎯 CheckoutPage - Payment success triggered!', paymentIntentId);
+    setLocalError('');
+    await actions.confirmPayment(paymentIntentId);
+    console.log('✅ CheckoutPage - Payment confirmed successfully!');
+  } catch (err) {
+    console.error('❌ CheckoutPage - Payment confirmation failed:', err);
+    setLocalError('Payment succeeded but confirmation failed. Please contact support.');
+  }
+}, [actions]);
+
 
   // Handle payment errors
   const handlePaymentError = useCallback((error: string) => {
