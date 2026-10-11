@@ -9,8 +9,6 @@ export interface Product {
   pages: number;
   format: string;
   category: string;
-   filePath?: string;  // dodaj ovo
-  fileName?: string;  // dodaj ovo
 }
 
 export interface CartItem {

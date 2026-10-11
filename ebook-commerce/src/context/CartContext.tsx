@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import { createContext } from 'react';
 import type { CartState, Product } from '../types';
 
 export const CartContext = createContext<{

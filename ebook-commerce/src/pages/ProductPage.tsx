@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useProducts } from '../hooks/useProduct';
 import type { Product } from '../types';
 import { Container } from '../components/ui/Container';
-import { Input } from '../components/ui/input';
+import { Input } from '../components/ui/Input';
 import { ProductCard } from '../components/ProductCard';
 
 export const ProductsPage: React.FC = () => {
-  const { products, searchProducts, filterByTag } = useProducts();
+  const { products, searchProducts } = useProducts();
   const [displayProducts, setDisplayProducts] = useState<Product[]>(products);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('');

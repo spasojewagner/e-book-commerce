@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { Container } from '../components/ui/Container';
-import { Input } from '../components/ui/input';
+import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Textarea';
 import { Button } from '../components/ui/Button';
 

@@ -5,7 +5,6 @@ export interface IDownload extends Document {
   token: string;
   orderId: string;
   productId: number;
-  filePath: string;
   fileName: string;
   downloadCount: number;
   maxDownloads: number;
@@ -25,10 +24,6 @@ const downloadSchema = new Schema<IDownload>({
   },
   productId: { 
     type: Number, 
-    required: true 
-  },
-  filePath: { 
-    type: String, 
     required: true 
   },
   fileName: { 

@@ -17,7 +17,6 @@ export interface IOrder extends Document {
     title: string;
     price: number;
     quantity: number;
-    filePath: string;
     fileName: string;
   }>;
   totalAmount: number;
@@ -50,7 +49,6 @@ const orderSchema = new Schema<IOrder>({
     title: { type: String, required: true },
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
-    filePath: { type: String, required: true },
     fileName: { type: String, required: true }
   }],
   totalAmount: { 

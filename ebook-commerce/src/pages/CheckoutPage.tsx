@@ -4,7 +4,7 @@ import { useCart } from '../hooks/useCart';
 import { useCheckoutSelectors, type CustomerInfo } from '../store/checkoutStore';
 import { Container } from '../components/ui/Container';
 import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/input';
+import { Input } from '../components/ui/Input';
 import { StripePayment } from '../components/StripePayments';
 import { Button } from '../components/ui/Button';
 
@@ -97,15 +97,11 @@ export const CheckoutPage: React.FC = () => {
       // Convert cart items to order items format
       const orderItems = state.items.map(item => ({
         productId: item.product.id,
-        title: item.product.title,
-        price: item.product.price,
         quantity: item.quantity,
-        filePath: item.product.filePath || `/files/${item.product.id}.pdf`,
-        fileName: item.product.fileName || `${item.product.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
       }));
 
       // Create payment intent
-      const paymentData = await actions.createPaymentIntent(orderItems, total);
+      const paymentData = await actions.createPaymentIntent(orderItems);
       
       // Here you would integrate with Stripe Elements
       // For now, let's simulate payment processing

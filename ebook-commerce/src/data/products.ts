@@ -12,8 +12,6 @@ export const PRODUCTS: Product[] = [
     pages: 342,
     format: "PDF",
     category: "History",
-    filePath: "uploads/Marko Spasojevic final.pdf", // UKLONIO "public/"
-    fileName: "Ancient_Mysteries_Revealed.pdf"
   },
   {
     id: 2,
@@ -26,8 +24,6 @@ export const PRODUCTS: Product[] = [
     pages: 428,
     format: "PDF",
     category: "Occult",
-    filePath: "uploads/Marko Spasojevic final.pdf", // UKLONIO "public/"
-    fileName: "The_Forbidden_Arts.pdf"
   },
   {
     id: 3,
@@ -40,8 +36,6 @@ export const PRODUCTS: Product[] = [
     pages: 256,
     format: "PDF",
     category: "Mathematics",
-    filePath: "uploads/Marko Spasojevic final.pdf", // UKLONIO "public/"
-    fileName: "Sacred_Geometry_Decoded.pdf"
   },
   {
     id: 4,
@@ -54,8 +48,6 @@ export const PRODUCTS: Product[] = [
     pages: 389,
     format: "PDF",
     category: "Conspiracy",
-    filePath: "uploads/Marko Spasojevic final.pdf", // UKLONIO "public/"
-    fileName: "Conspiracy_Chronicles.pdf"
   },
   {
     id: 5,
@@ -68,8 +60,6 @@ export const PRODUCTS: Product[] = [
     pages: 312,
     format: "PDF",
     category: "History",
-    filePath: "uploads/Marko Spasojevic final.pdf", // UKLONIO "public/"
-    fileName: "Hidden_History_Chronicles.pdf"
   },
   {
     id: 6,
@@ -82,7 +72,5 @@ export const PRODUCTS: Product[] = [
     pages: 367,
     format: "PDF",
     category: "Science",
-    filePath: "uploads/Marko Spasojevic final.pdf", // UKLONIO "public/"
-    fileName: "Quantum_Consciousness.pdf"
   }
 ];

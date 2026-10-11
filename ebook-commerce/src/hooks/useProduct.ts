@@ -3,8 +3,8 @@ import type { Product } from '../types';
 import { PRODUCTS } from '../data/products';
 
 export const useProducts = () => {
-  const [products, setProducts] = useState<Product[]>(PRODUCTS);
-  const [loading, setLoading] = useState(false);
+  const [products] = useState<Product[]>(PRODUCTS);
+  const [loading] = useState(false);
 
   const getProduct = (id: number) => {
     return products.find(p => p.id === id);

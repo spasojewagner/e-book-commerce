@@ -1,8 +1,8 @@
 // src/controllers/downloadController.ts
 import { Request, Response } from 'express';
-import path from 'path';
 import fs from 'fs';
 import Download from '../models/Download';
+import { ebookPath, findProduct } from '../config/catalog';
 
 export const downloadFile = async (req: Request, res: Response) => {
   try {
@@ -29,27 +29,27 @@ export const downloadFile = async (req: Request, res: Response) => {
       });
     }
 
-    // Check download limit
-    if (download.downloadCount >= download.maxDownloads) {
-      return res.status(403).json({ 
-        error: 'Download limit exceeded. Maximum downloads allowed: ' + download.maxDownloads 
+    // Count the download atomically, so parallel requests can't go over the limit.
+    const counted = await Download.findOneAndUpdate(
+      { _id: download._id, downloadCount: { $lt: download.maxDownloads } },
+      { $inc: { downloadCount: 1 } },
+      { new: true },
+    );
+    if (!counted) {
+      return res.status(403).json({
+        error: 'Download limit exceeded. Maximum downloads allowed: ' + download.maxDownloads
       });
     }
 
-    // Construct file path
-    const filePath = path.join(process.cwd(), download.filePath);
-    
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      console.error(`File not found: ${filePath}`);
-      return res.status(404).json({ 
-        error: 'File not found on server' 
+    // The file comes from the catalog, never from a path stored with the token or sent by the client.
+    const product = findProduct(download.productId);
+    const filePath = product ? ebookPath(product) : null;
+    if (!filePath || !fs.existsSync(filePath)) {
+      console.error(`E-book file missing for product ${download.productId}`);
+      return res.status(404).json({
+        error: 'File not found on server'
       });
     }
-
-    // Increment download count
-    download.downloadCount += 1;
-    await download.save();
 
     // Set headers for download
     res.setHeader('Content-Type', 'application/pdf');
@@ -67,8 +67,6 @@ export const downloadFile = async (req: Request, res: Response) => {
             error: 'Failed to download file' 
           });
         }
-      } else {
-        console.log(`File downloaded: ${download.fileName} by token: ${token}`);
       }
     });
 

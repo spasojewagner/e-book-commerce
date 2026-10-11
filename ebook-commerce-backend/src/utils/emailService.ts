@@ -1,10 +1,12 @@
 // src/utils/emailService.ts
 import nodemailer from 'nodemailer';
+import { escapeHtml } from './helper';
 
-interface EbookAttachment {
+interface PurchasedEbook {
   title: string;
-  filePath: string;
   fileName: string;
+  filePath: string; // absolute path from the catalog
+  downloadUrl: string; // personal link, valid 24 h, 5 downloads
 }
 
 class EmailService {
@@ -22,155 +24,38 @@ class EmailService {
       connectionTimeout: 60000,
       greetingTimeout: 30000,
       socketTimeout: 60000,
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-
-    this.transporter.verify((error, success) => {
-      if (error) {
-        console.error('❌ Email greška:', error);
-      } else {
-        console.log('✅ Email server spreman');
-      }
     });
   }
 
-  async sendEbookAttachments(
-    email: string,
-    firstName: string,
-    ebooks: EbookAttachment[]
-  ): Promise<void> {
-    console.log('\n📧 === POČETAK SLANJA EMAILA ===');
-    console.log('📧 Prima:', email);
-    console.log('📧 Ime:', firstName);
-    console.log('📧 Broj fajlova:', ebooks.length);
-    
-    // Validate email configuration first
+  /** Sends the bought books as PDF attachments, with a download link for each as a backup. */
+  async sendEbooks(email: string, firstName: string, ebooks: PurchasedEbook[]): Promise<void> {
     if (!process.env.EMAIL_PASS) {
-      throw new Error('EMAIL_PASS environment variable is not set');
+      throw new Error('EMAIL_PASS is not set');
     }
-
     if (!process.env.EMAIL_FROM && !process.env.EMAIL_USER) {
       throw new Error('EMAIL_FROM or EMAIL_USER must be set');
     }
 
-    console.log('✅ Email konfiguracija validna');
-
-    const emailHTML = this.generateAttachmentEmailTemplate(firstName, ebooks);
-    const attachments = [];
-    
-    // NOVO: Koristi URL linkove umesto lokalnih fajlova (kao u YouTube tutorialu)
-    for (let i = 0; i < ebooks.length; i++) {
-      const ebook = ebooks[i];
-      console.log(`\n📚 Priprema attachment ${i + 1}/${ebooks.length}: ${ebook.title}`);
-      
-      // Generiši URL za fajl
-      let fileUrl;
-      
-      // Ako filePath već počinje sa http, koristi ga direktno
-      if (ebook.filePath.startsWith('http')) {
-        fileUrl = ebook.filePath;
-      } else {
-        // Inače, napravi URL na osnovu backend servera
-        const baseUrl = process.env.BACKEND_URL || 'http://localhost:4000';
-        fileUrl = `${baseUrl}/uploads/${ebook.fileName}`;
-      }
-      
-      console.log('📎 URL za attachment:', fileUrl);
-      
-      // Dodaj attachment sa URL-om
-      attachments.push({
-        filename: ebook.fileName,
-        path: fileUrl, // Ovo je ključno - path umesto content
-        contentType: 'application/pdf',
-        disposition: 'attachment'
-      });
-
-      console.log(`✅ Attachment pripremljen: ${ebook.fileName}`);
-    }
-
-    if (attachments.length === 0) {
-      const errorMsg = 'Nijedan PDF fajl nije pripremljen za slanje!';
-      console.error('❌', errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    console.log(`\n📎 Pripremljeno ${attachments.length} attachment(a) preko URL-ova`);
-
-    // Prepare mail options
-    const mailOptions = {
+    await this.transporter.sendMail({
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
       subject: 'Vaše kupljene e-knjige - Forbidden Knowledge',
-      html: emailHTML,
-      attachments: attachments
-    };
-
-    try {
-      console.log('\n📤 Slanje emaila u toku...');
-      console.log('📧 Od:', mailOptions.from);
-      console.log('📧 Za:', mailOptions.to);
-      console.log('📧 Attachments:', attachments.length);
-      console.log('📧 URLs:', attachments.map(a => a.path));
-      
-      const info = await this.transporter.sendMail(mailOptions);
-      
-      console.log('\n✅ === EMAIL USPEŠNO POSLAT ===');
-      console.log('📧 Message ID:', info.messageId);
-      console.log('📧 Prima:', email);
-      console.log('📚 Poslato fajlova:', attachments.length);
-      console.log('📧 Response:', info.response);
-      
-    } catch (error: any) {
-      console.error('\n❌ === GREŠKA PRI SLANJU EMAILA ===');
-      console.error('📧 Error code:', error.code);
-      console.error('📧 Error message:', error.message);
-      console.error('📧 Error response:', error.response);
-      
-      // Debug email configuration
-      console.error('\n🔧 Debug email konfiguracije:');
-      console.error('- EMAIL_HOST:', process.env.EMAIL_HOST);
-      console.error('- EMAIL_PORT:', process.env.EMAIL_PORT);
-      console.error('- EMAIL_USER exists:', !!process.env.EMAIL_USER);
-      console.error('- EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
-      console.error('- EMAIL_FROM:', process.env.EMAIL_FROM);
-      
-      throw new Error(`Greška pri slanju emaila: ${error.message}`);
-    }
+      html: this.generateAttachmentEmailTemplate(firstName, ebooks),
+      // Files are read from the server's own folder; nothing is fetched from a URL.
+      attachments: ebooks.map((ebook) => ({
+        filename: ebook.fileName,
+        path: ebook.filePath,
+        contentType: 'application/pdf',
+      })),
+    });
   }
 
-  // TEST METODA - dodaj ovo za testiranje
-  async sendTestEmail(email: string, testFileUrl: string): Promise<void> {
-    console.log('\n🧪 === TEST EMAIL ===');
-    console.log('📧 Test email za:', email);
-    console.log('📎 Test file URL:', testFileUrl);
-
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-      to: email,
-      subject: 'TEST - PDF Attachment',
-      html: `
-        <h2>Test Email</h2>
-        <p>Ovo je test email sa PDF attachment-om preko URL-a.</p>
-        <p>URL: ${testFileUrl}</p>
-      `,
-      attachments: [{
-        filename: 'test-document.pdf',
-        path: testFileUrl,
-        contentType: 'application/pdf'
-      }]
-    };
-
-    const info = await this.transporter.sendMail(mailOptions);
-    console.log('✅ Test email poslat, Message ID:', info.messageId);
-  }
-
-  private generateAttachmentEmailTemplate(firstName: string, ebooks: EbookAttachment[]): string {
+  private generateAttachmentEmailTemplate(firstName: string, ebooks: PurchasedEbook[]): string {
     const ebooksList = ebooks.map(ebook => `
       <div style="margin: 15px 0; padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
-        <h3 style="margin: 0 0 10px 0; color: #7c3aed; font-size: 18px;">${ebook.title}</h3>
-        <p style="color: #666; margin: 0; font-size: 14px;">📎 Fajl: ${ebook.fileName}</p>
+        <h3 style="margin: 0 0 10px 0; color: #7c3aed; font-size: 18px;">${escapeHtml(ebook.title)}</h3>
+        <p style="color: #666; margin: 0; font-size: 14px;">📎 Fajl: ${escapeHtml(ebook.fileName)}</p>
+        <p style="margin: 8px 0 0 0; font-size: 14px;"><a href="${escapeHtml(ebook.downloadUrl)}" style="color: #7c3aed;">Preuzmi</a> (link važi 24 sata, do 5 preuzimanja)</p>
       </div>
     `).join('');
 
@@ -190,7 +75,7 @@ class EmailService {
             <p style="color: #666; margin: 5px 0 0 0; font-style: italic;">Digitalna biblioteka tajnih znanja</p>
           </div>
 
-          <h2 style="color: #333; font-size: 24px;">Zdravo ${firstName}! 👋</h2>
+          <h2 style="color: #333; font-size: 24px;">Zdravo ${escapeHtml(firstName)}! 👋</h2>
           
           <p style="color: #666; line-height: 1.6; font-size: 16px;">
             Hvala vam na kupovini! Vaše plaćanje je uspešno potvrđeno i vaše e-knjige su priložene ovom emailu kao PDF fajlovi.

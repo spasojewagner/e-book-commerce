@@ -12,13 +12,10 @@ export interface CustomerInfo {
   zipCode: string;
 }
 
+// The server looks up title, price and file by id; only the id and quantity are sent.
 export interface OrderItem {
   productId: number;
-  title: string;
-  price: number;
   quantity: number;
-  filePath: string;
-  fileName: string;
 }
 
 export interface PaymentIntentResponse {
@@ -56,7 +53,7 @@ export interface CheckoutState {
   
   // Actions
   setCustomerInfo: (info: Partial<CustomerInfo>) => void;
-  createPaymentIntent: (items: OrderItem[], totalAmount: number) => Promise<PaymentIntentResponse>;
+  createPaymentIntent: (items: OrderItem[]) => Promise<PaymentIntentResponse>;
   confirmPayment: (paymentIntentId: string) => Promise<PaymentConfirmResponse>;
   getOrderStatus: (orderId: string) => Promise<OrderStatus>;
   resetCheckout: () => void;
@@ -93,7 +90,7 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
     }));
   },
 
-  createPaymentIntent: async (items, totalAmount) => {
+  createPaymentIntent: async (items) => {
     const { customerInfo } = get();
     
     try {
@@ -112,7 +109,6 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
       const response = await axiosInstance.post<PaymentIntentResponse>(
         '/api/payment/create-payment-intent',
         {
-          amount: totalAmount,
           items,
           customerInfo
         }
